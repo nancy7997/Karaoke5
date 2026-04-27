@@ -45,6 +45,11 @@
             margin: 0 2px; padding: 5px 10px;
             animation: bounceUpDown 0.6s infinite alternate ease-in-out;
         }
+        #flash-categories {
+            margin-top: 20px; font-size: 1.8em; font-weight: 900;
+            color: var(--spotify-green); text-transform: uppercase;
+            height: 1.5em; opacity: 0.8;
+        }
         @keyframes scrollIn { to { transform: translateX(0); } }
         @keyframes bounceUpDown { from { transform: translateY(0); } to { transform: translateY(-30px); } }
 
@@ -64,37 +69,27 @@
         #timer { font-size: 42px; font-weight: 800; background: #333; padding: 8px 15px; border-radius: 12px; min-width: 140px; }
         
         #mode-display { 
-            font-size: 1.8em; 
-            font-weight: 900; 
-            color: #3498db; 
-            margin: 10px 0 20px 0; 
-            min-height: 1.1em; 
-            text-transform: uppercase;
+            font-size: 1.8em; font-weight: 900; color: #3498db; 
+            margin: 10px 0 20px 0; min-height: 1.1em; text-transform: uppercase;
         }
 
         #wheel-area { 
-            flex-grow: 10; 
-            display: flex; 
-            justify-content: center; 
-            align-items: flex-start; 
-            position: relative;
-            margin-top: 15px;
+            flex-grow: 10; display: flex; justify-content: center; 
+            align-items: flex-start; position: relative; margin-top: 15px;
         }
         #wheel-container { position: relative; width: 85vw; height: 85vw; max-width: 380px; max-height: 380px; }
-        #wheel-canvas { width: 100%; height: 100%; border-radius: 50%; border: 4px solid white; transition: transform 4s cubic-bezier(0.1, 0.7, 0.2, 1); }
-        #pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-top: 35px solid white; z-index: 10; }
+        canvas { width: 100%; height: 100%; border-radius: 50%; border: 4px solid white; transition: transform 4s cubic-bezier(0.1, 0.7, 0.2, 1); }
+        #pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-top: 35px solid white; z-index: 100; }
 
         .btn-main { padding:15px 30px; border-radius:12px; border:none; font-weight:900; cursor: pointer; text-transform: uppercase; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 2000; flex-direction: column; justify-content: center; align-items: center; }
-        .modal-content { background: var(--spotify-dark); padding: 25px; border-radius: 25px; width: 85%; border: 1px solid #444; }
-        .modal button { margin: 10px 0; width: 100%; padding: 20px; font-weight: bold; border-radius: 12px; border: none; font-size: 1.1em; cursor: pointer;}
         
-        #winner-screen {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999; flex-direction: column;
-            justify-content: center; align-items: center; overflow: hidden;
-        }
-        #winner-name { font-size: 6em; color: var(--spotify-green); font-weight: 900; text-transform: uppercase; line-height: 1; margin: 0; }
+        /* Modal for the Mode Wheel */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 2000; flex-direction: column; justify-content: center; align-items: center; }
+        .modal-content { background: var(--spotify-dark); padding: 25px; border-radius: 25px; width: 85%; border: 1px solid #444; display: flex; flex-direction: column; align-items: center;}
+        .modal button { margin: 15px 0; width: 100%; padding: 20px; font-weight: bold; border-radius: 12px; border: none; font-size: 1.1em; cursor: pointer;}
+        
+        #mode-wheel-canvas { width: 280px; height: 280px; margin: 20px 0; }
+        #mode-pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 25px solid white; z-index: 200; }
     </style>
 </head>
 <body>
@@ -102,6 +97,7 @@
     <div id="intro-overlay">
         <div id="row-1" class="intro-row"></div>
         <div id="row-2" class="intro-row"></div>
+        <div id="flash-categories"></div>
     </div>
 
     <div id="game-content">
@@ -130,9 +126,12 @@
 
     <div id="modeModal" class="modal">
         <div class="modal-content">
-            <h2 style="color:white;">Select Mode</h2>
-            <button onclick="setMode('KARAOKE')" style="background:var(--spotify-green); color:white;">LET’S KARAOKE</button>
-            <button onclick="setMode('NAME THAT SONG/ARTIST')" style="background:#3498db; color:white;">NAME THAT SONG/ARTIST</button>
+            <h2 style="color:white; margin:0;">SPIN FOR MODE</h2>
+            <div style="position: relative; width: 280px; height: 280px;">
+                <div id="mode-pointer"></div>
+                <canvas id="mode-wheel-canvas" width="600" height="600"></canvas>
+            </div>
+            <button id="modeSpinBtn" onclick="spinModeWheel()" style="background:var(--spotify-green); color:white;">SPIN MODE WHEEL</button>
         </div>
     </div>
 
@@ -155,26 +154,38 @@
         </div>
     </div>
 
-    <div id="winner-screen">
-        <div id="winner-box">
-            <p style="font-size: 3em; color: white;">YOU WON</p>
-            <h2 id="winner-name">TEAM NAME</h2>
-        </div>
-    </div>
-
     <script>
         const categories = ["1950s-1970s", "1980s", "1990s", "2000s", "2010s", "2020s", "Host's Choice"];
         const sliceColors = ['#e6194B', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#42d4f4'];
+        
+        // Mode Wheel options: 6 slices, alternating
+        const modeOptions = ["KARAOKE", "NAME THAT SONG", "KARAOKE", "NAME THAT SONG", "KARAOKE", "NAME THAT SONG"];
+        const modeColors = ["#1DB954", "#3498db", "#1DB954", "#3498db", "#1DB954", "#3498db"];
+
         let team1Name, team2Name, currentTeam = 1, score1 = 0, score2 = 0, turnCount = 0, activeMode = '';
-        let countdownInterval, currentRotation = 0;
+        let countdownInterval, currentRotation = 0, modeRotation = 0;
+        
         const canvas = document.getElementById('wheel-canvas'), ctx = canvas.getContext('2d');
+        const modeCanvas = document.getElementById('mode-wheel-canvas'), mCtx = modeCanvas.getContext('2d');
 
         window.onload = function() {
             createLetters("KARAOKE", "row-1", 0);
             createLetters("ROULETTE", "row-2", 3);
+            
+            // INTRO FLASH CATEGORIES
+            let flashIdx = 0;
+            const flashTimer = setInterval(() => {
+                document.getElementById('flash-categories').innerText = categories[flashIdx % categories.length];
+                flashIdx++;
+            }, 150);
+
             setTimeout(() => {
+                clearInterval(flashTimer);
                 document.getElementById('intro-overlay').style.opacity = '0';
-                setTimeout(() => { document.getElementById('intro-overlay').style.display = 'none'; setupTeams(); }, 1000);
+                setTimeout(() => { 
+                    document.getElementById('intro-overlay').style.display = 'none'; 
+                    setupTeams(); 
+                }, 1000);
             }, 4500);
         };
 
@@ -196,6 +207,7 @@
             updateTurnBanner();
             document.getElementById('game-content').style.display = 'flex';
             drawWheel();
+            drawModeWheel();
         }
 
         function updateTurnBanner() {
@@ -205,15 +217,12 @@
 
         function drawWheel() {
             const numSlices = categories.length, sliceAngle = (2 * Math.PI) / numSlices;
-            const center = 400; 
             ctx.clearRect(0, 0, 800, 800);
             for (let i = 0; i < numSlices; i++) {
-                ctx.beginPath(); ctx.moveTo(center, center); ctx.arc(center, center, 390, i * sliceAngle, (i+1) * sliceAngle);
+                ctx.beginPath(); ctx.moveTo(400, 400); ctx.arc(400, 400, 390, i * sliceAngle, (i+1) * sliceAngle);
                 ctx.fillStyle = sliceColors[i]; ctx.fill();
-                ctx.save(); ctx.translate(center, center); ctx.rotate(i * sliceAngle + sliceAngle / 2);
-                ctx.textAlign = "right"; ctx.fillStyle = "black"; 
-                ctx.font = "bold 50px sans-serif"; 
-                
+                ctx.save(); ctx.translate(400, 400); ctx.rotate(i * sliceAngle + sliceAngle / 2);
+                ctx.textAlign = "right"; ctx.fillStyle = "black"; ctx.font = "bold 50px sans-serif"; 
                 let t = categories[i];
                 if (t.includes("-")) {
                     let p = t.split("-"); ctx.fillText(p[0] + "-", 340, -20); ctx.fillText(p[1], 340, 50);
@@ -224,32 +233,62 @@
             }
         }
 
+        function drawModeWheel() {
+            const numSlices = 6, sliceAngle = (2 * Math.PI) / numSlices;
+            mCtx.clearRect(0, 0, 600, 600);
+            for (let i = 0; i < numSlices; i++) {
+                mCtx.beginPath(); mCtx.moveTo(300, 300); mCtx.arc(300, 300, 290, i * sliceAngle, (i+1) * sliceAngle);
+                mCtx.fillStyle = modeColors[i]; mCtx.fill();
+                mCtx.save(); mCtx.translate(300, 300); mCtx.rotate(i * sliceAngle + sliceAngle / 2);
+                mCtx.textAlign = "right"; mCtx.fillStyle = "white"; mCtx.font = "bold 40px sans-serif";
+                
+                let text = modeOptions[i];
+                if(text === "NAME THAT SONG") {
+                   mCtx.fillText("NAME THAT", 270, -15); mCtx.fillText("SONG", 270, 45);
+                } else {
+                   mCtx.fillText(text, 270, 15);
+                }
+                ctx.restore();
+                mCtx.restore();
+            }
+        }
+
         function spinWheel() {
             document.getElementById('spinBtn').style.display = 'none';
             document.getElementById('mode-display').innerText = ""; 
-
             const prizeIndex = Math.floor(Math.random() * categories.length);
             const stopAngle = 360 - (prizeIndex * (360/categories.length)) - (180/categories.length);
-            
             currentRotation += (360 * 5) + stopAngle - (currentRotation % 360);
             canvas.style.transform = `rotate(${currentRotation}deg)`;
             
             setTimeout(() => { 
                 document.getElementById('modeModal').style.display = 'flex';
-            }, 9000); 
+            }, 5000); // 5 seconds wait for spin to finish
+        }
+
+        function spinModeWheel() {
+            document.getElementById('modeSpinBtn').style.display = 'none';
+            const prizeIndex = Math.floor(Math.random() * 6);
+            const stopAngle = 360 - (prizeIndex * 60) - 30;
+            modeRotation += (360 * 5) + stopAngle - (modeRotation % 360);
+            modeCanvas.style.transform = `rotate(${modeRotation}deg)`;
+
+            setTimeout(() => {
+                setMode(modeOptions[prizeIndex]);
+            }, 5000);
         }
 
         function setMode(m) {
             activeMode = m; 
             document.getElementById('modeModal').style.display = 'none';
             document.getElementById('mode-display').innerText = m;
-            document.getElementById('mode-display').style.color = m === 'KARAOKE' ? '#1DB954' : '#3498db';
+            document.getElementById('mode-display').style.color = (m === 'KARAOKE') ? '#1DB954' : '#3498db';
             document.getElementById('stopBtn').style.display = 'inline-block';
             startTimer();
         }
 
         function startTimer() {
-            let time = 90; // Set to 1:30 (90 seconds)
+            let time = 90; // 1:30
             clearInterval(countdownInterval);
             countdownInterval = setInterval(() => {
                 time--; let m = Math.floor(time/60), s = time%60;
@@ -260,25 +299,26 @@
 
         function triggerPopup() {
             clearInterval(countdownInterval);
-            if (activeMode === 'KARAOKE') {
-                document.getElementById('spinScoreModal').style.display = 'flex';
-            } else {
-                document.getElementById('guessScoreModal').style.display = 'flex';
-            }
+            const modalId = (activeMode === 'KARAOKE') ? 'spinScoreModal' : 'guessScoreModal';
+            document.getElementById(modalId).style.display = 'flex';
         }
 
         function recordScore(pts) {
             if (currentTeam === 1) { score1 += pts; document.getElementById('s1').innerText = score1; currentTeam = 2; }
             else { score2 += pts; document.getElementById('s2').innerText = score2; currentTeam = 1; }
             turnCount++;
+            
             document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-            document.getElementById('timer').innerText = "01:30"; // Reset to 1:30
+            document.getElementById('timer').innerText = "01:30";
             document.getElementById('stopBtn').style.display = 'none';
             document.getElementById('spinBtn').style.display = 'inline-block';
+            document.getElementById('modeSpinBtn').style.display = 'block'; 
             document.getElementById('mode-display').innerText = "SPIN TO START";
             document.getElementById('mode-display').style.color = "#3498db";
+            
             document.getElementById('t1-box').classList.toggle('active-team');
             document.getElementById('t2-box').classList.toggle('active-team');
+            
             if (turnCount >= 10) endGame();
             else {
                 document.getElementById('round-indicator').innerText = `Round ${Math.floor(turnCount/2)+1} of 5`;
@@ -288,14 +328,11 @@
 
         function endGame() {
             let win = score1 > score2 ? team1Name : (score2 > score1 ? team2Name : "TIE!");
-            document.getElementById('game-content').style.display = 'none';
-            document.getElementById('winner-screen').style.display = 'flex';
-            document.getElementById('winner-name').innerText = win;
-            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            alert("WINNER: " + win);
+            location.reload();
         }
         
         function earlyStop() { triggerPopup(); }
     </script>
 </body>
 </html>
-
