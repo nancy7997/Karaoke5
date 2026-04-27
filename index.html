@@ -12,6 +12,7 @@
             --spotify-green: #1DB954;
             --spotify-black: #121212;
             --spotify-dark: #282828;
+            --spotify-blue: #3498db;
             --text-main: #FFFFFF;
         }
 
@@ -41,14 +42,14 @@
         }
         #row-2 { animation-delay: 0.5s; }
         .block-letter {
-            font-size: 12vw; font-weight: 900; display: inline-block;
+            font-size: 10vw; font-weight: 900; display: inline-block;
             margin: 0 2px; padding: 5px 10px;
             animation: bounceUpDown 0.6s infinite alternate ease-in-out;
         }
         #flash-categories {
-            margin-top: 20px; font-size: 1.8em; font-weight: 900;
+            margin-top: 30px; font-size: 1.8em; font-weight: 900;
             color: var(--spotify-green); text-transform: uppercase;
-            height: 1.5em; opacity: 0.8;
+            height: 1.5em; text-shadow: 0 0 10px rgba(29, 185, 84, 0.5);
         }
         @keyframes scrollIn { to { transform: translateX(0); } }
         @keyframes bounceUpDown { from { transform: translateY(0); } to { transform: translateY(-30px); } }
@@ -69,27 +70,24 @@
         #timer { font-size: 42px; font-weight: 800; background: #333; padding: 8px 15px; border-radius: 12px; min-width: 140px; }
         
         #mode-display { 
-            font-size: 1.8em; font-weight: 900; color: #3498db; 
+            font-size: 1.6em; font-weight: 900; color: var(--spotify-blue); 
             margin: 10px 0 20px 0; min-height: 1.1em; text-transform: uppercase;
         }
 
-        #wheel-area { 
-            flex-grow: 10; display: flex; justify-content: center; 
-            align-items: flex-start; position: relative; margin-top: 15px;
-        }
+        #wheel-area { flex-grow: 10; display: flex; justify-content: center; align-items: flex-start; position: relative; margin-top: 15px; }
         #wheel-container { position: relative; width: 85vw; height: 85vw; max-width: 380px; max-height: 380px; }
         canvas { width: 100%; height: 100%; border-radius: 50%; border: 4px solid white; transition: transform 4s cubic-bezier(0.1, 0.7, 0.2, 1); }
-        #pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-top: 35px solid white; z-index: 100; }
+        .pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-top: 35px solid white; z-index: 100; }
 
         .btn-main { padding:15px 30px; border-radius:12px; border:none; font-weight:900; cursor: pointer; text-transform: uppercase; }
         
-        /* Modal for the Mode Wheel */
+        /* Modal Styles */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 2000; flex-direction: column; justify-content: center; align-items: center; }
         .modal-content { background: var(--spotify-dark); padding: 25px; border-radius: 25px; width: 85%; border: 1px solid #444; display: flex; flex-direction: column; align-items: center;}
         .modal button { margin: 15px 0; width: 100%; padding: 20px; font-weight: bold; border-radius: 12px; border: none; font-size: 1.1em; cursor: pointer;}
         
-        #mode-wheel-canvas { width: 280px; height: 280px; margin: 20px 0; }
-        #mode-pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 25px solid white; z-index: 200; }
+        #mode-wheel-wrapper { position: relative; width: 300px; height: 300px; margin: 20px 0; }
+        #mode-wheel-canvas { width: 100%; height: 100%; }
     </style>
 </head>
 <body>
@@ -110,7 +108,7 @@
         
         <div class="controls-row">
             <div id="timer">01:30</div>
-            <button onclick="spinWheel()" id="spinBtn" class="btn-main" style="background:var(--spotify-green); color:white;">SPIN WHEEL</button>
+            <button onclick="spinCategory()" id="spinBtn" class="btn-main" style="background:var(--spotify-green); color:white;">SPIN CATEGORY</button>
             <button onclick="earlyStop()" id="stopBtn" class="btn-main" style="background:#e74c3c; color:white; display:none;">STOP</button>
         </div>
 
@@ -118,7 +116,7 @@
 
         <div id="wheel-area">
             <div id="wheel-container">
-                <div id="pointer"></div>
+                <div class="pointer"></div>
                 <canvas id="wheel-canvas" width="800" height="800"></canvas>
             </div>
         </div>
@@ -126,12 +124,12 @@
 
     <div id="modeModal" class="modal">
         <div class="modal-content">
-            <h2 style="color:white; margin:0;">SPIN FOR MODE</h2>
-            <div style="position: relative; width: 280px; height: 280px;">
-                <div id="mode-pointer"></div>
+            <h2 style="color:white; margin:0;">SELECT MODE</h2>
+            <div id="mode-wheel-wrapper">
+                <div class="pointer" style="border-top-color: white;"></div>
                 <canvas id="mode-wheel-canvas" width="600" height="600"></canvas>
             </div>
-            <button id="modeSpinBtn" onclick="spinModeWheel()" style="background:var(--spotify-green); color:white;">SPIN MODE WHEEL</button>
+            <button id="modeSpinBtn" onclick="spinModeWheel()" style="background:var(--spotify-blue); color:white;">SPIN FOR MODE</button>
         </div>
     </div>
 
@@ -148,7 +146,7 @@
         <div class="modal-content">
             <h2 style="color:white;">Result?</h2>
             <button onclick="recordScore(50)" style="background:var(--spotify-green); color:white;">BOTH (50)</button>
-            <button onclick="recordScore(15)" style="background:#3498db; color:white;">ARTIST ONLY (15)</button>
+            <button onclick="recordScore(15)" style="background:var(--spotify-blue); color:white;">ARTIST ONLY (15)</button>
             <button onclick="recordScore(10)" style="background:#9b59b6; color:white;">SONG ONLY (10)</button>
             <button onclick="recordScore(0)" style="background:#e74c3c; color:white;">NONE (0)</button>
         </div>
@@ -158,56 +156,161 @@
         const categories = ["1950s-1970s", "1980s", "1990s", "2000s", "2010s", "2020s", "Host's Choice"];
         const sliceColors = ['#e6194B', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#42d4f4'];
         
-        // Mode Wheel options: 6 slices, alternating
-        const modeOptions = ["KARAOKE", "NAME THAT SONG", "KARAOKE", "NAME THAT SONG", "KARAOKE", "NAME THAT SONG"];
+        // Mode Setup: Alternating 6 slices
+        const modeList = ["KARAOKE", "NAME THAT SONG", "KARAOKE", "NAME THAT SONG", "KARAOKE", "NAME THAT SONG"];
         const modeColors = ["#1DB954", "#3498db", "#1DB954", "#3498db", "#1DB954", "#3498db"];
 
         let team1Name, team2Name, currentTeam = 1, score1 = 0, score2 = 0, turnCount = 0, activeMode = '';
-        let countdownInterval, currentRotation = 0, modeRotation = 0;
+        let countdownInterval, catRotation = 0, modeRotation = 0;
         
-        const canvas = document.getElementById('wheel-canvas'), ctx = canvas.getContext('2d');
-        const modeCanvas = document.getElementById('mode-wheel-canvas'), mCtx = modeCanvas.getContext('2d');
+        const catCanvas = document.getElementById('wheel-canvas');
+        const modeCanvas = document.getElementById('mode-wheel-canvas');
 
         window.onload = function() {
-            createLetters("KARAOKE", "row-1", 0);
-            createLetters("ROULETTE", "row-2", 3);
+            createIntroLetters("KARAOKE", "row-1", 0);
+            createIntroLetters("ROULETTE", "row-2", 3);
             
-            // INTRO FLASH CATEGORIES
             let flashIdx = 0;
-            const flashTimer = setInterval(() => {
+            const flashInt = setInterval(() => {
                 document.getElementById('flash-categories').innerText = categories[flashIdx % categories.length];
                 flashIdx++;
             }, 150);
 
             setTimeout(() => {
-                clearInterval(flashTimer);
+                clearInterval(flashInt);
                 document.getElementById('intro-overlay').style.opacity = '0';
                 setTimeout(() => { 
                     document.getElementById('intro-overlay').style.display = 'none'; 
-                    setupTeams(); 
+                    setupGame(); 
                 }, 1000);
             }, 4500);
         };
 
-        function createLetters(text, rowId, offset) {
+        function createIntroLetters(text, rowId, offset) {
             const container = document.getElementById(rowId);
             text.split('').forEach((char, i) => {
-                const span = document.createElement('span'); span.className = 'block-letter'; span.innerText = char;
+                const span = document.createElement('span'); 
+                span.className = 'block-letter'; 
+                span.innerText = char;
                 span.style.color = sliceColors[(i + offset) % sliceColors.length];
                 span.style.animationDelay = (i * 0.1) + 's'; 
-                if (container) container.appendChild(span);
+                container.appendChild(span);
             });
         }
 
-        function setupTeams() {
+        function setupGame() {
             team1Name = prompt("Team 1 Name:", "Team 1") || "Team 1";
             team2Name = prompt("Team 2 Name:", "Team 2") || "Team 2";
-            document.getElementById('t1-name').innerText = team1Name;
-            document.getElementById('t2-name').innerText = team2Name;
-            updateTurnBanner();
+            document.getElementById('t1-name').innerText = team1Name.toUpperCase();
+            document.getElementById('t2-name').innerText = team2Name.toUpperCase();
             document.getElementById('game-content').style.display = 'flex';
-            drawWheel();
+            drawCategoryWheel();
             drawModeWheel();
+            updateTurnBanner();
+        }
+
+        function drawCategoryWheel() {
+            const ctx = catCanvas.getContext('2d');
+            const numSlices = categories.length;
+            const angle = (Math.PI * 2) / numSlices;
+            for (let i = 0; i < numSlices; i++) {
+                ctx.beginPath(); ctx.moveTo(400, 400); ctx.arc(400, 400, 390, i * angle, (i + 1) * angle);
+                ctx.fillStyle = sliceColors[i]; ctx.fill();
+                ctx.save(); ctx.translate(400, 400); ctx.rotate(i * angle + angle/2);
+                ctx.textAlign = "right"; ctx.fillStyle = "black"; ctx.font = "bold 45px sans-serif";
+                let t = categories[i];
+                if (t.includes("-")) {
+                    let p = t.split("-"); ctx.fillText(p[0]+"-", 350, -10); ctx.fillText(p[1], 350, 45);
+                } else { ctx.fillText(t, 350, 15); }
+                ctx.restore();
+            }
+        }
+
+        function drawModeWheel() {
+            const ctx = modeCanvas.getContext('2d');
+            const numSlices = 6;
+            const angle = (Math.PI * 2) / numSlices;
+            for (let i = 0; i < numSlices; i++) {
+                ctx.beginPath(); ctx.moveTo(300, 300); ctx.arc(300, 300, 290, i * angle, (i + 1) * angle);
+                ctx.fillStyle = modeColors[i]; ctx.fill();
+                ctx.save(); ctx.translate(300, 300); ctx.rotate(i * angle + angle/2);
+                ctx.textAlign = "right"; ctx.fillStyle = "white"; ctx.font = "bold 35px sans-serif";
+                let t = modeList[i];
+                if (t === "NAME THAT SONG") {
+                    ctx.fillText("NAME THAT", 270, -15); ctx.fillText("SONG", 270, 35);
+                } else { ctx.fillText(t, 270, 10); }
+                ctx.restore();
+            }
+        }
+
+        function spinCategory() {
+            document.getElementById('spinBtn').style.display = 'none';
+            document.getElementById('mode-display').innerText = "SPINNING...";
+            const prize = Math.floor(Math.random() * categories.length);
+            const stopAt = 360 - (prize * (360/categories.length)) - (180/categories.length);
+            catRotation += (360 * 5) + stopAt - (catRotation % 360);
+            catCanvas.style.transform = `rotate(${catRotation}deg)`;
+            setTimeout(() => { document.getElementById('modeModal').style.display = 'flex'; }, 4500);
+        }
+
+        function spinModeWheel() {
+            document.getElementById('modeSpinBtn').style.display = 'none';
+            const prize = Math.floor(Math.random() * 6);
+            const stopAt = 360 - (prize * 60) - 30;
+            modeRotation += (360 * 5) + stopAt - (modeRotation % 360);
+            modeCanvas.style.transform = `rotate(${modeRotation}deg)`;
+            setTimeout(() => { finalizeMode(prize); }, 4500);
+        }
+
+        function finalizeMode(idx) {
+            activeMode = modeList[idx];
+            document.getElementById('modeModal').style.display = 'none';
+            document.getElementById('mode-display').innerText = activeMode;
+            document.getElementById('mode-display').style.color = modeColors[idx];
+            document.getElementById('stopBtn').style.display = 'inline-block';
+            startTimer();
+        }
+
+        function startTimer() {
+            let time = 90;
+            clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                time--;
+                let m = Math.floor(time/60), s = time%60;
+                document.getElementById('timer').innerText = `0${m}:${s < 10 ? '0' : ''}${s}`;
+                if (time <= 0) triggerScoring();
+            }, 1000);
+        }
+
+        function triggerScoring() {
+            clearInterval(countdownInterval);
+            const modal = (activeMode === 'KARAOKE') ? 'spinScoreModal' : 'guessScoreModal';
+            document.getElementById(modal).style.display = 'flex';
+        }
+
+        function recordScore(pts) {
+            if (currentTeam === 1) { score1 += pts; document.getElementById('s1').innerText = score1; currentTeam = 2; }
+            else { score2 += pts; document.getElementById('s2').innerText = score2; currentTeam = 1; }
+            
+            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+            document.getElementById('timer').innerText = "01:30";
+            document.getElementById('spinBtn').style.display = 'inline-block';
+            document.getElementById('modeSpinBtn').style.display = 'block';
+            document.getElementById('stopBtn').style.display = 'none';
+            document.getElementById('mode-display').innerText = "SPIN TO START";
+            document.getElementById('mode-display').style.color = "var(--spotify-blue)";
+            
+            document.getElementById('t1-box').classList.toggle('active-team');
+            document.getElementById('t2-box').classList.toggle('active-team');
+            
+            turnCount++;
+            if (turnCount >= 10) { 
+                alert("GAME OVER! WINNER: " + (score1 > score2 ? team1Name : team2Name));
+                location.reload(); 
+            } else {
+                document.getElementById('round-indicator').innerText = `Round ${Math.floor(turnCount/2)+1} of 5`;
+                updateTurnBanner();
+            }
         }
 
         function updateTurnBanner() {
@@ -215,124 +318,7 @@
             document.getElementById('current-team-banner').innerText = `${name.toUpperCase()}'S TURN`;
         }
 
-        function drawWheel() {
-            const numSlices = categories.length, sliceAngle = (2 * Math.PI) / numSlices;
-            ctx.clearRect(0, 0, 800, 800);
-            for (let i = 0; i < numSlices; i++) {
-                ctx.beginPath(); ctx.moveTo(400, 400); ctx.arc(400, 400, 390, i * sliceAngle, (i+1) * sliceAngle);
-                ctx.fillStyle = sliceColors[i]; ctx.fill();
-                ctx.save(); ctx.translate(400, 400); ctx.rotate(i * sliceAngle + sliceAngle / 2);
-                ctx.textAlign = "right"; ctx.fillStyle = "black"; ctx.font = "bold 50px sans-serif"; 
-                let t = categories[i];
-                if (t.includes("-")) {
-                    let p = t.split("-"); ctx.fillText(p[0] + "-", 340, -20); ctx.fillText(p[1], 340, 50);
-                } else if (t.includes("'s")) {
-                     let p = t.split("'s"); ctx.fillText(p[0] + "'s", 340, -20); ctx.fillText(p[1], 340, 50);
-                } else { ctx.fillText(t, 340, 15); }
-                ctx.restore();
-            }
-        }
-
-        function drawModeWheel() {
-            const numSlices = 6, sliceAngle = (2 * Math.PI) / numSlices;
-            mCtx.clearRect(0, 0, 600, 600);
-            for (let i = 0; i < numSlices; i++) {
-                mCtx.beginPath(); mCtx.moveTo(300, 300); mCtx.arc(300, 300, 290, i * sliceAngle, (i+1) * sliceAngle);
-                mCtx.fillStyle = modeColors[i]; mCtx.fill();
-                mCtx.save(); mCtx.translate(300, 300); mCtx.rotate(i * sliceAngle + sliceAngle / 2);
-                mCtx.textAlign = "right"; mCtx.fillStyle = "white"; mCtx.font = "bold 40px sans-serif";
-                
-                let text = modeOptions[i];
-                if(text === "NAME THAT SONG") {
-                   mCtx.fillText("NAME THAT", 270, -15); mCtx.fillText("SONG", 270, 45);
-                } else {
-                   mCtx.fillText(text, 270, 15);
-                }
-                ctx.restore();
-                mCtx.restore();
-            }
-        }
-
-        function spinWheel() {
-            document.getElementById('spinBtn').style.display = 'none';
-            document.getElementById('mode-display').innerText = ""; 
-            const prizeIndex = Math.floor(Math.random() * categories.length);
-            const stopAngle = 360 - (prizeIndex * (360/categories.length)) - (180/categories.length);
-            currentRotation += (360 * 5) + stopAngle - (currentRotation % 360);
-            canvas.style.transform = `rotate(${currentRotation}deg)`;
-            
-            setTimeout(() => { 
-                document.getElementById('modeModal').style.display = 'flex';
-            }, 5000); // 5 seconds wait for spin to finish
-        }
-
-        function spinModeWheel() {
-            document.getElementById('modeSpinBtn').style.display = 'none';
-            const prizeIndex = Math.floor(Math.random() * 6);
-            const stopAngle = 360 - (prizeIndex * 60) - 30;
-            modeRotation += (360 * 5) + stopAngle - (modeRotation % 360);
-            modeCanvas.style.transform = `rotate(${modeRotation}deg)`;
-
-            setTimeout(() => {
-                setMode(modeOptions[prizeIndex]);
-            }, 5000);
-        }
-
-        function setMode(m) {
-            activeMode = m; 
-            document.getElementById('modeModal').style.display = 'none';
-            document.getElementById('mode-display').innerText = m;
-            document.getElementById('mode-display').style.color = (m === 'KARAOKE') ? '#1DB954' : '#3498db';
-            document.getElementById('stopBtn').style.display = 'inline-block';
-            startTimer();
-        }
-
-        function startTimer() {
-            let time = 90; // 1:30
-            clearInterval(countdownInterval);
-            countdownInterval = setInterval(() => {
-                time--; let m = Math.floor(time/60), s = time%60;
-                document.getElementById('timer').innerText = `0${m}:${s<10?'0':''}${s}`;
-                if (time <= 0) triggerPopup();
-            }, 1000);
-        }
-
-        function triggerPopup() {
-            clearInterval(countdownInterval);
-            const modalId = (activeMode === 'KARAOKE') ? 'spinScoreModal' : 'guessScoreModal';
-            document.getElementById(modalId).style.display = 'flex';
-        }
-
-        function recordScore(pts) {
-            if (currentTeam === 1) { score1 += pts; document.getElementById('s1').innerText = score1; currentTeam = 2; }
-            else { score2 += pts; document.getElementById('s2').innerText = score2; currentTeam = 1; }
-            turnCount++;
-            
-            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-            document.getElementById('timer').innerText = "01:30";
-            document.getElementById('stopBtn').style.display = 'none';
-            document.getElementById('spinBtn').style.display = 'inline-block';
-            document.getElementById('modeSpinBtn').style.display = 'block'; 
-            document.getElementById('mode-display').innerText = "SPIN TO START";
-            document.getElementById('mode-display').style.color = "#3498db";
-            
-            document.getElementById('t1-box').classList.toggle('active-team');
-            document.getElementById('t2-box').classList.toggle('active-team');
-            
-            if (turnCount >= 10) endGame();
-            else {
-                document.getElementById('round-indicator').innerText = `Round ${Math.floor(turnCount/2)+1} of 5`;
-                updateTurnBanner();
-            }
-        }
-
-        function endGame() {
-            let win = score1 > score2 ? team1Name : (score2 > score1 ? team2Name : "TIE!");
-            alert("WINNER: " + win);
-            location.reload();
-        }
-        
-        function earlyStop() { triggerPopup(); }
+        function earlyStop() { triggerScoring(); }
     </script>
 </body>
 </html>
