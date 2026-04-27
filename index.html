@@ -155,8 +155,6 @@
     <script>
         const categories = ["1950s-1970s", "1980s", "1990s", "2000s", "2010s", "2020s", "Host's Choice"];
         const sliceColors = ['#e6194B', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#42d4f4'];
-        
-        // Mode Setup: Alternating 6 slices
         const modeList = ["KARAOKE", "NAME THAT SONG", "KARAOKE", "NAME THAT SONG", "KARAOKE", "NAME THAT SONG"];
         const modeColors = ["#1DB954", "#3498db", "#1DB954", "#3498db", "#1DB954", "#3498db"];
 
@@ -247,6 +245,7 @@
             document.getElementById('spinBtn').style.display = 'none';
             document.getElementById('mode-display').innerText = "SPINNING...";
             const prize = Math.floor(Math.random() * categories.length);
+            // Land in middle: 360 - (prize * sliceSize) - (sliceSize / 2)
             const stopAt = 360 - (prize * (360/categories.length)) - (180/categories.length);
             catRotation += (360 * 5) + stopAt - (catRotation % 360);
             catCanvas.style.transform = `rotate(${catRotation}deg)`;
@@ -256,10 +255,13 @@
         function spinModeWheel() {
             document.getElementById('modeSpinBtn').style.display = 'none';
             const prize = Math.floor(Math.random() * 6);
+            // Dead center: 360 - (prize index * 60 degrees) - 30 degrees (middle of 60)
             const stopAt = 360 - (prize * 60) - 30;
             modeRotation += (360 * 5) + stopAt - (modeRotation % 360);
             modeCanvas.style.transform = `rotate(${modeRotation}deg)`;
-            setTimeout(() => { finalizeMode(prize); }, 4500);
+            
+            // Wait for spin (4.5s) + Result visibility (1.5s)
+            setTimeout(() => { finalizeMode(prize); }, 6000); 
         }
 
         function finalizeMode(idx) {
